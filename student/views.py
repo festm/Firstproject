@@ -1,15 +1,19 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
+from django import template
 
 from django.shortcuts import render
 from django.conf import settings
 from django.shortcuts import render, redirect
 from django.http import HttpResponse, HttpResponseRedirect
-from .models import Student
+from .models import Student,Request
 from django.contrib.auth.decorators import login_required,user_passes_test #even after loging in the function only if he is certain user
 from django.contrib.auth import authenticate,login,logout
 from django.contrib.auth.models import User
+from random import randint
 # Create your views here.
+
+register = template.Library()
 
 @login_required(login_url='/student/signin')	
 def home1(request,param1='jess'): #to every function request is a parameter 
@@ -37,18 +41,29 @@ def newreq(request):
 	response['name'] = current_user
 	response['users'] = allUsers
 	return render(request,'production/request.html',response)
-	
+
+@register.assignment_tag()
+def random_no(length=3) :
+		return randint(10**(length-1),(10**(length)-1))
+		
 def savereq(request):
 	if request.method =="POST":
 		type = request.POST['type']
 		descrp = request.POST['message']
-		totype = request.POST['to']
-		print(type)
-		print(descrp)
-		print(touser)
+		touser = request.POST['to']
+		check = random_no()
+		while Request.objects.filter(rid=check):
+			check = random_no()
+		obj = Request()
+		obj.rid=check
+		obj.type=type
+		obj.descrp=descrp
+		obj.fromuser=request.user.username
+		obj.touser = touser
+		obj.save();
 		
 			
-	return render(request,'production/index.html')	
+	return redirect('/student/index')	
 	
 @login_required(login_url='/student/signin')	
 def saveData(request):
