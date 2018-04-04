@@ -5,11 +5,44 @@ from django.shortcuts import render
 from django.conf import settings
 from django.shortcuts import render, redirect
 from django.http import HttpResponse, HttpResponseRedirect
-from .models import Student
+from .models import Fuser
 from django.contrib.auth.decorators import login_required,user_passes_test #even after loging in the function only if he is certain user
 from django.contrib.auth import authenticate,login,logout
 from django.contrib.auth.models import User
-# Create your views here.
+
+
+
+def saveData(request):
+
+	if request.method == "POST":
+		cid = request.POST['spid']
+		
+	print(cid)
+
+	if Fuser.objects.filter(fid=cid).exists():
+		if Fuser.objects.filter(nop=0).exists() :
+			fob=Fuser.objects.filter(fid=cid).update(nop=1)
+ 			return redirect(dispCred,cid)
+		else:
+			text="""<h1> Credentials already issued </h1>"""
+			return HttpResponse(text)
+	else:
+		text="""<h2> Invalid ID </h2>"""
+		return HttpResponse(text)
+
+def dispCred(request,id):
+
+	obj=Fuser.objects.filter(fid=id)
+	resp={}
+	resp['flag']=False
+	resp['fusers']=obj
+	return render(request, 'cred.html',resp)
+
+
+def fourdig(request):
+#need to write code to check if first time
+
+	return render(request, 'start.html')
 
 @login_required(login_url='/student/signin')	
 def home1(request,param1='jess'): #to every function request is a parameter 
@@ -50,26 +83,7 @@ def savereq(request):
 			
 	return render(request,'production/index.html')	
 	
-@login_required(login_url='/student/signin')	
-def saveData(request):
-	if request.method =="POST":
-		full_name = request.POST['full_name']
-		rollno = request.POST['rollno']
-		class_studying = request.POST['class_studying']
-		father_name = request.POST['father_name']
-		mother_name = request.POST['mother_name']
-		father_phn = request.POST['father_phn']
-		
-		obj = Student()
-		obj.full_name = full_name
-		obj.rollno = rollno
-		obj.class_studying = class_studying
-		obj.father_name = father_name
-		obj.mother_name = mother_name
-		obj.father_phn = father_phn
-		obj.save() #gets saved in the database
-		
-	return redirect('/student/home1')
+
 	
 def signin(request):
 	response = {}
